@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Punch Out Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:     #0d0d10;
+  --bg2:    #131317;
+  --surf:   #19191f;
+  --surf2:  #202028;
+  --surf3:  #28282f;
+  --b1:     rgba(255,255,255,0.06);
+  --b2:     rgba(255,255,255,0.11);
+  --b3:     rgba(255,255,255,0.20);
+  --tx:     #eeedf8;
+  --tx2:    #8887a0;
+  --tx3:    #4e4d62;
+  --green:  #20d68a;
+  --green2: #0ea865;
+  --gbg:    rgba(32,214,138,0.10);
+  --gbrd:   rgba(32,214,138,0.22);
+  --amber:  #f5a623;
+  --red:    #ff5858;
+  --purple: #7b6fff;
+  --pbg:    rgba(123,111,255,0.12);
+  --blue:   #4da3ff;
+}
+
+
+:root.light{
+  --bg:     #f0f0f3;
+  --bg2:    #e4e4e9;
+  --surf:   #ffffff;
+  --surf2:  #f5f5f8;
+  --surf3:  #eaeaee;
+  --b1:     rgba(0,0,0,0.06);
+  --b2:     rgba(0,0,0,0.10);
+  --b3:     rgba(0,0,0,0.18);
+  --tx:     #111118;
+  --tx2:    #555568;
+  --tx3:    #9898aa;
+  --green:  #0ea865;
+  --green2: #0b8a52;
+  --gbg:    rgba(14,168,101,0.09);
+  --gbrd:   rgba(14,168,101,0.22);
+  --amber:  #d4870a;
+  --red:    #e03030;
+  --purple: #5b4ef0;
+  --pbg:    rgba(91,78,240,0.10);
+  --blue:   #1a7ee0;
+}
+
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--tx);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ─── SHELL ─── */
+.shell{
+  width:100%;
+  max-width:900px;
+  padding:1.1rem 1.25rem;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+
+/* ─── HEADER ─── */
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:.9rem;
+}
+.header h1{
+  font-size:19px;font-weight:800;letter-spacing:-.5px;
+  background:linear-gradient(130deg,#eeedf8 0%,#7b7a96 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.header p{font-size:11px;color:var(--tx3);margin-top:2px}
+
+.badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--pbg);border:1px solid rgba(123,111,255,.2);
+  border-radius:99px;padding:5px 14px;
+}
+.badge .dot{
+  width:7px;height:7px;background:var(--green);
+  border-radius:50%;flex-shrink:0;
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+#live-clock{
+  font-size:12px;font-weight:700;color:var(--purple);
+  font-variant-numeric:tabular-nums;letter-spacing:.05em;
+}
+
+/* ─── LAYOUT ─── */
+.layout{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  align-items:stretch;
+}
+
+.col{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  height:100%;
+}
+
+/* ─── CARD ─── */
+.card{
+  background:var(--surf);
+  border:1px solid var(--b2);
+  border-radius:16px;
+  padding:13px 15px;
+}
+.card-title{
+  font-size:9.5px;font-weight:700;
+  color:var(--tx3);text-transform:uppercase;letter-spacing:.12em;
+  margin-bottom:9px;
+}
+
+/* ─── SEGMENTS ─── */
+.seg-group{
+  display:flex;gap:3px;
+  background:var(--bg2);border-radius:10px;padding:3px;border:1px solid var(--b1);
+}
+.seg-btn{
+  flex:1;padding:7px 4px;border:none;background:transparent;
+  border-radius:8px;font-size:11px;font-weight:600;
+  color:var(--tx2);cursor:pointer;transition:all .18s;
+  font-family:'Inter',sans-serif;
+}
+.seg-btn.active{
+  background:var(--surf3);color:var(--tx);
+  border:1px solid var(--b2);box-shadow:0 1px 4px rgba(0,0,0,.5);
+}
+.seg-btn:hover:not(.active){color:var(--tx);background:rgba(255,255,255,.04)}
+
+/* ─── INPUTS ─── */
+.row{display:flex;gap:6px;align-items:center}
+input[type=number]{
+  flex:1;height:34px;
+  background:var(--bg2);border:1px solid var(--b2);border-radius:8px;
+  color:var(--tx);font-size:13px;font-family:'Inter',sans-serif;
+  padding:0 10px;outline:none;
+  transition:border-color .18s,box-shadow .18s;
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(123,111,255,.15)}
+.apply-btn{
+  height:34px;padding:0 14px;
+  background:var(--surf3);border:1px solid var(--b3);border-radius:8px;
+  color:var(--tx);font-size:12px;font-weight:600;
+  font-family:'Inter',sans-serif;cursor:pointer;transition:all .18s;white-space:nowrap;
+}
+.apply-btn:hover{border-color:var(--purple);color:var(--purple)}
+.apply-btn:active{transform:scale(.97)}
+
+/* ─── TEXTAREA ─── */
+.hint{font-size:10px;color:var(--tx3);margin-bottom:6px;line-height:1.55}
+textarea{
+  width:100%;
+  background:var(--bg2);border:1px solid var(--b2);border-radius:10px;
+  color:var(--tx);font-size:12.5px;
+  font-family:'SF Mono','Fira Mono','Consolas',monospace;
+  padding:10px 12px;outline:none;resize:none;line-height:1.9;
+  transition:border-color .18s,box-shadow .18s;
+  height:108px;
+}
+/* ─── PREMIUM DARK SCROLLBAR ─── */
+
+textarea::-webkit-scrollbar{
+  width:6px;
+}
+
+textarea::-webkit-scrollbar-track{
+  background:transparent;
+  margin:8px 0;
+}
+
+textarea::-webkit-scrollbar-thumb{
+  background:rgba(123,111,255,0.35);
+  border-radius:999px;
+  transition:all .2s ease;
+}
+
+textarea::-webkit-scrollbar-thumb:hover{
+  background:rgba(123,111,255,0.65);
+}
+
+/* Firefox */
+textarea{
+  scrollbar-width:thin;
+  scrollbar-color:rgba(123,111,255,0.45) transparent;
+}
+textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(123,111,255,.15)}
+textarea::placeholder{color:var(--tx3)}
+.err{
+  font-size:11px;color:var(--red);
+  background:rgba(255,88,88,.08);border:1px solid rgba(255,88,88,.2);
+  border-radius:7px;padding:6px 10px;margin-top:7px;display:none;
+}
+
+/* ─── STAT GRID ─── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.stat{
+  background:var(--surf2);border:1px solid var(--b1);
+  border-radius:13px;padding:12px 14px;
+  transition:border-color .2s;
+}
+.stat:hover{border-color:var(--b2)}
+.stat.g{background:var(--gbg);border-color:var(--gbrd)}
+
+.stat-lbl{
+  font-size:9px;font-weight:700;
+  color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;
+  margin-bottom:6px;
+}
+.stat-val{
+  font-size:22px;font-weight:800;
+  color:var(--tx);letter-spacing:-.5px;
+  font-variant-numeric:tabular-nums;
+  line-height:1;
+}
+.stat-val.c-green {color:var(--green)}
+.stat-val.c-blue  {color:var(--blue)}
+.stat-val.c-amber {color:var(--amber)}
+.stat-val.c-red   {color:var(--red)}
+
+/* glow on target */
+.stat.g .stat-val{text-shadow:0 0 16px rgba(32,214,138,.4)}
+
+
+
+/* ─── PROGRESS ─── */
+.prog-wrap{
+  background:var(--surf2);border:1px solid var(--b1);
+  border-radius:13px;padding:13px 14px;
+}
+.prog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.prog-lbl{font-size:11px;font-weight:600;color:var(--tx2)}
+.prog-pct{font-size:12px;font-weight:800;color:var(--green)}
+.prog-pct.over{color:var(--amber)}
+.track{height:8px;background:var(--surf3);border-radius:99px;overflow:hidden;margin-bottom:9px}
+.fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--green2),var(--green));
+  transition:width .6s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.fill::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;
+  width:3px;background:white;border-radius:99px;opacity:.45;
+}
+.fill.over{background:linear-gradient(90deg,#b83800,var(--amber))}
+.prog-foot{display:flex;justify-content:space-between}
+.prog-foot span{font-size:10px;color:var(--tx3)}
+.prog-foot .done{color:var(--green);font-weight:700}
+.prog-foot .overtxt{color:var(--amber);font-weight:700}
+
+/* ─── TIMELINE ─── */
+.tl{
+  display:flex;align-items:center;
+  margin-top:9px;
+  background:var(--surf3);border-radius:9px;padding:8px 13px;
+}
+.tl-t{font-size:11px;font-weight:700;color:var(--tx2);white-space:nowrap}
+.tl-mid{flex:1;display:flex;align-items:center;justify-content:center;position:relative;padding:0 8px}
+.tl-line{height:1px;background:linear-gradient(90deg,var(--b3),var(--green),var(--b3));width:100%}
+.tl-tag{
+  position:absolute;top:-7px;
+  font-size:9px;color:var(--tx3);
+  background:var(--surf3);padding:0 4px;white-space:nowrap;
+}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:680px){
+  html,body{overflow:auto;height:auto}
+  body{align-items:flex-start}
+  .shell{padding:.85rem}
+  .layout{grid-template-columns:1fr}
+  .stat-val{font-size:20px}
+  .cd-val{font-size:24px}
+}
+@media(max-width:400px){
+  .shell{padding:.65rem}
+  .header h1{font-size:16px}
+  .stat-val{font-size:18px}
+  .cd-val{font-size:20px}
+  .seg-btn{font-size:10px}
+}
+
+/* ─── THEME TOGGLE ─── */
+.theme-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surf2);border:1px solid var(--b2);
+  border-radius:99px;padding:5px 13px;
+  font-size:11px;font-weight:600;color:var(--tx2);
+  cursor:pointer;transition:all .2s;
+  font-family:'Inter',sans-serif;
+  white-space:nowrap;
+}
+.theme-btn:hover{border-color:var(--purple);color:var(--purple)}
+.theme-btn .t-icon{font-size:13px;line-height:1}
+
+/* ─── TOAST NOTIFICATION ─── */
+.toast{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  background:#1a1a22;
+  border:1px solid var(--green);
+  border-radius:14px;
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(32,214,138,0.15);
+  z-index:9999;
+  transform:translateY(80px);
+  opacity:0;
+  transition:transform 0.4s cubic-bezier(0.2,0.8,0.3,1), opacity 0.4s ease;
+  pointer-events:none;
+  max-width:320px;
+}
+.toast.show{
+  transform:translateY(0);
+  opacity:1;
+  pointer-events:auto;
+}
+.toast-icon{font-size:24px;flex-shrink:0}
+.toast-body{}
+.toast-title{font-size:13px;font-weight:700;color:#eeedf8;margin-bottom:2px}
+.toast-msg{font-size:11px;color:#8887a0;line-height:1.5}
+.toast-close{
+  position:absolute;top:8px;right:10px;
+  background:none;border:none;color:#5f5e70;
+  font-size:14px;cursor:pointer;padding:2px 4px;
+  font-family:'Inter',sans-serif;
+}
+.toast-close:hover{color:#eeedf8}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>Punch Out Calculator</h1>
+      <p>Know exactly when to clock out</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="theme-btn" id="notif-btn">
+        <span class="t-icon" id="notif-icon">🔔</span>
+        <span id="notif-label">Enable Notify</span>
+      </button>
+      <button class="theme-btn" id="theme-btn">
+        <span class="t-icon">🌙</span>
+        <span id="theme-label">Dark</span>
+      </button>
+      <div class="badge">
+        <span class="dot"></span>
+        <span id="live-clock">--:--:-- --</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ── LEFT ── -->
+    <div class="col">
+
+      <!-- Shift type -->
+      <div class="card">
+        <div class="card-title">Shift type</div>
+        <div class="seg-group" id="seg-group">
+          <button class="seg-btn active" data-hours="8">Product · 8h</button>
+          <button class="seg-btn" data-hours="9">CF · 9h</button>
+          <button class="seg-btn" data-hours="5">Half day · 5h</button>
+        </div>
+      </div>
+
+      <!-- Custom hours -->
+      <div class="card">
+        <div class="card-title">Custom hours</div>
+        <div class="row">
+          <input type="number" id="custom-hours" placeholder="e.g. 7.5" min="0.5" max="24" step="0.5"/>
+          <button class="apply-btn" id="apply-custom">Apply</button>
+        </div>
+      </div>
+
+      <!-- Time entries -->
+      <div class="card" style="flex:1;display:flex;flex-direction:column;">
+        <div class="card-title">Time entries</div>
+        <p class="hint">One per line — In, Break Out, Break In … use MISSING as last entry if still working</p>
+        <textarea id="time-input" spellcheck="false" style="flex:1;min-height:80px;height:auto;"
+          placeholder="9:55:49 AM&#10;1:02:54 PM&#10;1:38:05 PM&#10;MISSING"></textarea>
+        <div class="err" id="err"></div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT ── -->
+    <div class="col">
+
+      <!-- Empty state (shown when no input) -->
+      <div id="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--surf);border:1px solid var(--b2);border-radius:16px;padding:2rem 1.5rem;text-align:center;min-height:100%;height:100%;">
+        <div style="width:44px;height:44px;border-radius:13px;background:var(--surf2);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:22px;">⏱</div>
+        <div style="font-size:13px;font-weight:700;color:var(--tx2);">No data yet</div>
+        <div style="font-size:11px;color:var(--tx3);line-height:1.65;max-width:190px;">Enter your punch-in time on the left to see live results</div>
+      </div>
+
+      <!-- Results (hidden until input) -->
+      <div id="results-wrap" style="display:none;flex-direction:column;gap:12px;">
+
+      <!-- Stat cards -->
+      <div class="card">
+        <div class="card-title">Result</div>
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-lbl">Punch in</div>
+            <div class="stat-val c-blue" id="r-in">—</div>
+          </div>
+          <div class="stat g">
+            <div class="stat-lbl">Target out</div>
+            <div class="stat-val c-green" id="r-target">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-lbl">Total break</div>
+            <div class="stat-val" id="r-break">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-lbl">Base hours</div>
+            <div class="stat-val" id="r-base">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-lbl">Worked so far</div>
+            <div class="stat-val" id="r-worked">—</div>
+          </div>
+          <div class="stat" id="r-extra-card">
+            <div class="stat-lbl" id="r-extra-lbl">Remaining</div>
+            <div class="stat-val" id="r-extra">—</div>
+            <div id="cd-inline" style="display:none;margin-top:6px;font-size:11px;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:.04em;color:var(--tx3);">
+              <span id="cd-inline-val">00:00:00</span>
+              <span style="font-size:9px;font-weight:500;margin-left:4px;color:var(--tx3);opacity:.7;">live</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="card">
+        <div class="card-title">Shift progress</div>
+        <div class="prog-wrap">
+          <div class="prog-head">
+            <span class="prog-lbl" id="prog-lbl">—</span>
+            <span class="prog-pct" id="prog-pct">0%</span>
+          </div>
+          <div class="track"><div class="fill" id="prog-fill" style="width:0%"></div></div>
+          <div class="prog-foot">
+            <span id="prog-l">—</span>
+            <span id="prog-r">—</span>
+          </div>
+          <div class="tl">
+            <span class="tl-t" id="tl-in">—</span>
+            <div class="tl-mid">
+              <div class="tl-line"></div>
+              <span class="tl-tag" id="tl-dur">—</span>
+            </div>
+            <span class="tl-t" id="tl-out">—</span>
+          </div>
+        </div>
+      </div>
+
+      </div><!-- /results-wrap -->
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  let baseHours=8, piSec=null, tbSec=0, isMissing=false, notifSent=false;
+
+  const $ = id => document.getElementById(id);
+
+  /* ── time helpers ── */
+  function ns(){const n=new Date();return n.getHours()*3600+n.getMinutes()*60+n.getSeconds()}
+
+  function fmtClock(s){
+    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;
+    const ap=h>=12?'PM':'AM',hd=h>12?h-12:(h===0?12:h);
+    return pad(hd)+':'+pad(m)+':'+pad(sc)+' '+ap;
+  }
+  function fmtTime(s){
+    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;
+    const ap=h>=12?'pm':'am',hd=h>12?h-12:(h===0?12:h);
+    return hd+':'+pad(m)+':'+pad(sc)+' '+ap;
+  }
+  function fmtDur(s){
+    if(s<0)s=0;
+    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);
+    return h>0?h+'h '+m+'m':m+'m';
+  }
+  function fmtCD(s){
+    if(s<=0)return'00:00:00';
+    return pad(Math.floor(s/3600))+':'+pad(Math.floor((s%3600)/60))+':'+pad(s%60);
+  }
+  function pad(n){return String(n).padStart(2,'0')}
+
+  /* ── DOM helpers ── */
+  function setText(id,v){const e=$(id);if(e)e.textContent=v}
+  function setClass(id,c){
+    const e=$(id);if(!e)return;
+    e.className=e.className.replace(/\bc-(green|blue|amber|red)\b/g,'').trim();
+    if(c)e.classList.add(c);
+  }
+
+  /* ── parse ── */
+  function parseTime(str){
+    str=str.trim();
+    if(str.toUpperCase()==='MISSING')return null;
+    const m=str.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+    if(!m)return NaN;
+    let h=+m[1],min=+m[2],sec=m[3]?+m[3]:0;
+    const ap=(m[4]||'').toUpperCase();
+    if(ap==='PM'&&h<12)h+=12;
+    if(ap==='AM'&&h===12)h=0;
+    return h*3600+min*60+sec;
+  }
+
+  /* ── main compute ── */
+  function compute(reparse){
+    const raw=$('time-input').value.trim();
+    const errEl=$('err');
+
+    if(reparse){
+      errEl.style.display='none';
+      piSec=null;tbSec=0;isMissing=false;notifSent=false;
+      if(!raw){reset();return}
+      const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+      if(!lines.length){reset();return}
+      const times=lines.map(parseTime);
+      if(times.some(t=>t!==null&&isNaN(t))){
+        errEl.textContent='Cannot parse entry. Use format: 9:55 AM or 13:45:00';
+        errEl.style.display='block';reset();return;
+      }
+      isMissing=times[times.length-1]===null;
+      const pi=times[0];
+      if(pi===null||isNaN(pi)){errEl.textContent='Punch-in time is invalid.';errEl.style.display='block';reset();return}
+      piSec=pi;
+      let tb=0;
+      for(let i=1;i<times.length-1;i+=2){
+        const bo=times[i],bi=times[i+1];
+        if(bo!==null&&bi!==null)tb+=bi-bo;
+      }
+      tbSec=tb;
+      if(!isMissing){render(times[times.length-1],false);return}
+    }
+
+    if(piSec===null)return;
+    render(ns(),true);
+  }
+
+  function render(punchOut, live){
+    $('results-wrap').style.display='flex';
+    $('empty-state').style.display='none';
+    const now=ns();
+    const worked=punchOut-piSec-tbSec;
+    const target=baseHours*3600;
+    const poTarget=piSec+tbSec+target;
+    const remaining=poTarget-now;
+    const pct=Math.round((worked/target)*100);
+    const bar=Math.min(Math.max(pct,0),100);
+    const over=worked>=target;
+    if(over && isMissing) sendShiftDoneNotification();
+
+    /* stat cards */
+    setText('r-in',   fmtTime(piSec));
+    setText('r-target',fmtTime(poTarget));
+    setText('r-break', fmtDur(tbSec));
+    setText('r-base',  baseHours+'h');
+    setText('r-worked',fmtDur(Math.max(worked,0)));
+    setClass('r-worked', over?'c-green':'');
+
+    if(!over){
+      setText('r-extra-lbl','Remaining');
+      setText('r-extra', fmtDur(remaining>0?remaining:0));
+      setClass('r-extra', remaining>0&&remaining<900?'c-amber':remaining<=0?'c-red':'');
+    } else {
+      setText('r-extra-lbl','Overtime');
+      setText('r-extra', fmtDur(worked-target));
+      setClass('r-extra','c-green');
+    }
+
+    /* inline countdown inside Remaining card */
+    const cdInline=$('cd-inline');
+    const cdInlineVal=$('cd-inline-val');
+    if(live){
+      cdInline.style.display='block';
+      if(!over){
+        const cdSec=remaining>0?remaining:0;
+        cdInlineVal.textContent=fmtCD(cdSec);
+        cdInlineVal.style.color=remaining<=0?'var(--red)':remaining<900?'var(--amber)':'var(--green)';
+      } else {
+        cdInlineVal.textContent=fmtCD(worked-target);
+        cdInlineVal.style.color='var(--green)';
+      }
+    } else {
+      cdInline.style.display='none';
+    }
+
+    /* progress */
+    setText('prog-pct',Math.max(0,pct)+'%');
+    $('prog-pct').className='prog-pct'+(over?' over':'');
+    const fill=$('prog-fill');
+    fill.style.width=bar+'%';
+    fill.className='fill'+(over?' over':'');
+    setText('prog-lbl',baseHours+'h target');
+
+    if(!over){
+      setText('prog-l','In: '+fmtTime(piSec));
+      setText('prog-r',remaining>0?fmtDur(remaining)+' left':'Almost done!');
+      $('prog-r').className='';
+    } else {
+      setText('prog-l','Done: '+fmtTime(poTarget));
+      setText('prog-r','✓ Shift complete');
+      $('prog-r').className='done';
+    }
+
+    setText('tl-in', fmtTime(piSec));
+    setText('tl-out',fmtTime(poTarget));
+    setText('tl-dur',baseHours+'h shift');
+  }
+
+  function reset(){
+    piSec=null;notifSent=false;
+    const t=document.getElementById('shift-toast');if(t)t.classList.remove('show');
+    ['r-in','r-target','r-break','r-base','r-worked','r-extra',
+     'prog-pct','prog-l','prog-r','tl-in','tl-out','tl-dur','prog-lbl']
+    .forEach(id=>setText(id,'—'));
+    $('prog-fill').style.width='0%';
+    $('cd-inline').style.display='none';
+    $('results-wrap').style.display='none';
+    $('empty-state').style.display='flex';
+  }
+
+  /* ── notifications ── */
+  function requestNotifPermission(){
+    if('Notification' in window && Notification.permission === 'default'){
+      Notification.requestPermission();
+    }
+  }
+  requestNotifPermission();
+
+  function sendShiftDoneNotification(){
+    if(notifSent) return;
+    notifSent = true;
+
+    const msg = 'You have completed your ' + baseHours + 'h shift. Time to punch out!';
+
+    // 1. Browser push notification
+    if('Notification' in window && Notification.permission === 'granted'){
+      try {
+        const n = new Notification('✅ Shift Complete!', {
+          body: msg,
+          tag: 'punch-out',
+          requireInteraction: true
+        });
+        n.onclick = function(){ window.focus(); n.close(); };
+      } catch(e){}
+    }
+
+    // 2. In-app toast (always shows as fallback)
+    showToast(msg);
+  }
+
+  function showToast(msg){
+    const toast = document.getElementById('shift-toast');
+    const toastMsg = document.getElementById('toast-msg');
+    if(!toast) return;
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    // Auto hide after 8 seconds
+    setTimeout(function(){ toast.classList.remove('show'); }, 8000);
+  }
+
+  /* ── tick every second ── */
+  function tick(){
+    setText('live-clock',fmtClock(ns()));
+    if(piSec!==null&&isMissing)compute(false);
+  }
+  tick();
+  setInterval(tick,1000);
+
+  /* ── events ── */
+  $('seg-group').addEventListener('click',e=>{
+    const b=e.target.closest('.seg-btn');if(!b)return;
+    document.querySelectorAll('.seg-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    baseHours=parseFloat(b.dataset.hours);
+    $('custom-hours').value='';
+    compute(true);
+  });
+
+  $('apply-custom').addEventListener('click',()=>{
+    const v=parseFloat($('custom-hours').value);
+    if(!v||v<=0)return;
+    baseHours=v;
+    document.querySelectorAll('.seg-btn').forEach(x=>x.classList.remove('active'));
+    compute(true);
+  });
+
+  $('time-input').addEventListener('input',()=>{piSec=null;compute(true)});
+
+  compute(true);
+})();
+
+
+</script>
+<script>
+(function(){
+  // Notification button
+  var nbtn=document.getElementById('notif-btn');
+  var nicon=document.getElementById('notif-icon');
+  var nlabel=document.getElementById('notif-label');
+
+  function updateNotifBtn(){
+    if(!('Notification' in window)){
+      nbtn.style.display='none'; return;
+    }
+    if(Notification.permission==='granted'){
+      nicon.textContent='🔔'; nlabel.textContent='Notify: On';
+      nbtn.style.borderColor='var(--green)'; nbtn.style.color='var(--green)';
+      nbtn.style.opacity='1'; nbtn.style.cursor='default';
+      nbtn.title='Notifications are enabled';
+    } else if(Notification.permission==='denied'){
+      // Browser blocked — show instructions, hide the button
+      nbtn.style.display='none';
+      // Show a small inline tip near the button area
+      var tip=document.getElementById('notif-tip');
+      if(!tip){
+        tip=document.createElement('div');
+        tip.id='notif-tip';
+        tip.style.cssText='font-size:10px;color:var(--amber);display:inline-flex;align-items:center;gap:5px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.25);border-radius:99px;padding:5px 12px;cursor:pointer;';
+        tip.innerHTML='⚠️ <span>Allow notifications in browser settings</span>';
+        tip.title='Click to learn how to unblock';
+        tip.addEventListener('click',function(){
+          alert('To enable notifications:\n\n1. Click the lock icon in your browser address bar\n2. Find "Notifications" and set it to "Allow"\n3. Refresh the page');
+        });
+        nbtn.parentNode.insertBefore(tip, nbtn);
+      }
+    } else {
+      nicon.textContent='🔔'; nlabel.textContent='Enable Notify';
+      nbtn.style.borderColor=''; nbtn.style.color='';
+      nbtn.style.opacity='1'; nbtn.style.cursor='pointer';
+      nbtn.title='Click to enable shift completion notifications';
+    }
+  }
+  updateNotifBtn();
+
+  nbtn.addEventListener('click',function(){
+    if(!('Notification' in window)) return;
+    if(Notification.permission==='denied') return;
+    if(Notification.permission==='granted'){
+      return; // already on
+    }
+    Notification.requestPermission().then(function(p){
+      updateNotifBtn();
+      if(p==='granted'){
+        new Notification('🔔 Notifications enabled',{
+          body:'You will be alerted when your shift is complete.',
+          tag:'test'
+        });
+      }
+    });
+  });
+
+  // Toast close
+  var toastClose=document.getElementById('toast-close');
+  if(toastClose){
+    toastClose.addEventListener('click',function(){
+      document.getElementById('shift-toast').classList.remove('show');
+    });
+  }
+
+  var btn=document.getElementById('theme-btn');
+  var icon=btn.querySelector('.t-icon');
+  var label=document.getElementById('theme-label');
+  var dark=true;
+  btn.addEventListener('click',function(){
+    dark=!dark;
+    if(dark){
+      document.documentElement.classList.remove('light');
+      icon.textContent='🌙';label.textContent='Dark';
+    } else {
+      document.documentElement.classList.add('light');
+      icon.textContent='☀️';label.textContent='Light';
+    }
+  });
+})();
+</script>
+
+<!-- Toast notification -->
+<div class="toast" id="shift-toast">
+  <div class="toast-icon">✅</div>
+  <div class="toast-body">
+    <div class="toast-title">Shift Complete!</div>
+    <div class="toast-msg" id="toast-msg">You've completed your shift. Time to punch out!</div>
+  </div>
+  <button class="toast-close" id="toast-close">✕</button>
+</div>
+</body>
+</html>
